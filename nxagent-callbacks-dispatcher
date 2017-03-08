@@ -1,0 +1,77 @@
+#!/bin/bash
+
+
+
+set -x
+
+_usage() {
+
+    ###### U S A G E : Help and ERROR ######
+
+cat <<EOF
+ $(basename $0) $Options
+$*
+        Usage: $(basename $0) <[options]>
+
+        Options:
+                -d <TYPE>    --dialog=<TYPE>        Dialog type
+                -c <TITLE>   --caption=<TITLE>      Caption text
+                -m <MSG>     --message=<MSG>        Message
+                -l           --local                local, otherwise remote
+                -w <XID>     --window=<XID>         Attach to window
+                -p <XID>     --parent=<XID>         Parent object
+                -D <DISPLAY> --display=<DISPLAY>    X11 display number
+
+                -h           --help                 Show this message
+EOF
+}
+
+if [ $# = 0 ]; then _usage "  >>>>>>>> no options given "; fi
+
+while getopts ':d:c:m:w:p:D:lh-:' OPTION ; do
+	case "$OPTION" in
+		l  ) local="yes"                                                             ;;
+		h  ) _usage                                                                  ;;
+		d  ) is_dialog="yes"; dialog_type="$OPTARG"                                  ;;
+		c  ) has_caption="yes"; caption_text="$OPTARG"                               ;;
+		m  ) has_message="yes"; message_text="$OPTARG"                               ;;
+		w  ) has_windowid="yes"; windowid="$OPTARG"                                  ;;
+		p  ) has_parentid="yes"; parentid="$OPTARG"                                  ;;
+		D  ) display_set="yes"; display_name="$OPTARG"                               ;;
+
+		-  ) LONG_OPTARG="${OPTARG#*=}"
+			case $OPTARG in
+				local     ) local="yes"                                      ;;
+				help      ) _usage                                           ;;
+				dialog=*  ) is_dialog="yes"; dialog_type="$LONG_OPTARG"      ;;
+				dialog    ) is_dialog="yes"; dialog_type="${!OPTIND}"
+				            shift                                            ;;
+				caption=* ) has_caption="yes"; caption_text="$LONG_OPTARG"   ;;
+				caption   ) has_caption="yes"; caption_text="${!OPTIND}"
+				            shift                                            ;;
+				message=* ) has_message="yes"; message_text="$LONG_OPTARG"   ;;
+				message   ) has_message="yes"; message_text="${!OPTIND}"
+				            shift                                            ;;
+				window=*  ) has_windowid="yes"; windowid="$LONG_OPTARG"      ;;
+				window    ) has_windowid="yes"; windowid="${!OPTIND}"
+				            shift                                            ;;
+				parent=*  ) has_parentid="yes"; parentid="$LONG_OPTARG"      ;;
+				parent    ) has_parentid="yes"; parentid="${!OPTIND}"
+				            shift                                            ;;
+				display=* ) display_set="yes"; display_name="$LONG_OPTARG"   ;;
+				display   ) display_set="yes"; display_name="${!OPTIND}"
+				            shift                                            ;;
+				* )  _usage " Long: >>>>>>>> invalide options (long)"        ;;
+			esac
+			OPTIND=1
+			shift
+		;;
+		? )  _usage "Short: >>>>>>>> invalid options (short) "                       ;;
+	esac
+done
+
+export DISPLAY=${display_name} 
+
+zenity --info --text="$message_text" --title "$caption_text"
+
+exit 0
